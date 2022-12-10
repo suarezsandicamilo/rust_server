@@ -24,25 +24,25 @@ impl HttpRequest {
 
         if lines.is_empty() || lines[0].is_empty() {
             return Err(std::io::Error::new(
-                std::io::ErrorKind::ConnectionRefused,
+                std::io::ErrorKind::InvalidData,
                 "The http request is empty",
             ));
         }
 
-        return Self::from_string(&lines[0]);
+        return Self::from_line(&lines[0]);
     }
 
-    fn from_string(line: &str) -> Result<Self, std::io::Error> {
+    fn from_line(line: &str) -> Result<Self, std::io::Error> {
         let line_parts: Vec<&str> = line.split(" ").collect();
 
         if line_parts.len() != 3 {
             return Err(std::io::Error::new(
-                std::io::ErrorKind::ConnectionRefused,
+                std::io::ErrorKind::InvalidData,
                 "Invalid http request message",
             ));
         }
 
-        let method = HttpMethod::from_string(&line_parts[0])?;
+        let method = HttpMethod::new(&line_parts[0])?;
 
         // TODO: Validation of target
         let target = line_parts[1].to_string();
