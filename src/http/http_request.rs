@@ -1,5 +1,6 @@
 // Copyright 2022 Camilo Suárez Sandí
 
+use std::collections::HashMap;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::net::TcpStream;
@@ -10,6 +11,7 @@ pub struct HttpRequest {
     method: HttpMethod,
     target: String,
     version: String,
+    headers: HashMap<String, String>,
 }
 
 impl HttpRequest {
@@ -22,40 +24,62 @@ impl HttpRequest {
             .take_while(|line| !line.is_empty())
             .collect();
 
-        if lines.is_empty() || lines[0].is_empty() {
+        if lines.is_empty() {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
                 "The http request is empty",
             ));
         }
 
-        return Self::from_line(&lines[0]);
+        let mut http_request = Self::from_first_line(&lines[0])?;
+
+        http_request.add_headers(&lines[1..])?;
+
+        Ok(http_request)
     }
 
-    fn from_line(line: &str) -> Result<Self, std::io::Error> {
-        let line_parts: Vec<&str> = line.split(" ").collect();
+    fn from_first_line(line: &String) -> Result<Self, std::io::Error> {
+        let split: Vec<&str> = line.split(" ").collect();
 
-        if line_parts.len() != 3 {
+        if split.len() != 3 {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
                 "Invalid http request message",
             ));
         }
 
-        let method = HttpMethod::new(&line_parts[0])?;
+        let method = HttpMethod::new(&split[0])?;
 
         // TODO: Validation of target
-        let target = line_parts[1].to_string();
+        let target = split[1].to_string();
 
         // TODO: Validation of version
-        let version = line_parts[2].to_string();
+        let version = split[2].to_string();
 
         let http_request = Self {
             method,
             target,
             version,
+            headers: HashMap::new(),
         };
 
         return Ok(http_request);
+    }
+
+    fn add_headers(&mut self, lines: &[String]) -> Result<(), std::io::Error> {
+        for line in lines {
+            if !line.contains(":") {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "Invalid http header",
+                ));
+            }
+
+            let (key, value) = line.split_once(":").unwrap_or_default();
+
+            self.headers.insert(key.to_string(), value.to_string());
+        }
+
+        Ok(())
     }
 }
