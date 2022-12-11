@@ -1,8 +1,10 @@
 // Copyright 2022 Camilo Suárez Sandí
 
+use std::fs;
 use std::io::Write;
 use std::net::TcpListener;
 use std::net::TcpStream;
+use std::path;
 
 use crate::http::http_request::HttpRequest;
 use crate::http::http_response::HttpResponse;
@@ -45,11 +47,27 @@ impl HttpServer {
     pub fn handle_connection(&self, stream: &mut TcpStream) -> Result<(), std::io::Error> {
         let http_request = HttpRequest::from_stream(&stream)?;
 
-        let mut http_response = HttpResponse::new(&http_request);
+        match http_request.target().as_str() {
+            "/" => {
+                let file = path::Path::new("./public/index.html");
 
-        http_response.add_body("Hello, World!");
+                let data = fs::read_to_string(file)?;
 
-        stream.write_all(http_response.to_string().as_bytes())?;
+                let mut http_response = HttpResponse::new(&http_request);
+
+                http_response.add_body(&data);
+
+                stream.write_all(http_response.to_string().as_bytes())?;
+            }
+            _ => {
+                let mut http_response = HttpResponse::new(&http_request);
+
+                http_response.set_code(404);
+                http_response.add_body(&"Not Found!".to_string());
+
+                stream.write_all(http_response.to_string().as_bytes())?;
+            }
+        }
 
         Ok(())
     }

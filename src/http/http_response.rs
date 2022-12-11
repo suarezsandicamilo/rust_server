@@ -25,7 +25,7 @@ impl HttpResponse {
         self.headers.insert(key.to_string(), value.to_string());
     }
 
-    pub fn add_body(&mut self, string: &'static str) {
+    pub fn add_body(&mut self, string: &String) {
         self.body.push_str(string);
     }
 
