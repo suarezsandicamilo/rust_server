@@ -15,6 +15,22 @@ pub struct HttpRequest {
 }
 
 impl HttpRequest {
+    pub fn method(&self) -> &HttpMethod {
+        &self.method
+    }
+
+    pub fn target(&self) -> &String {
+        &self.target
+    }
+
+    pub fn version(&self) -> &String {
+        &self.version
+    }
+
+    pub fn headers(&self) -> &HashMap<String, String> {
+        &self.headers
+    }
+
     pub fn from_stream(stream: &TcpStream) -> Result<Self, std::io::Error> {
         let buf_reader = BufReader::new(stream);
 
@@ -33,13 +49,13 @@ impl HttpRequest {
 
         let mut http_request = Self::from_first_line(&lines[0])?;
 
-        http_request.add_headers(&lines[1..])?;
+        http_request.add_headers_from_lines(&lines[1..])?;
 
         Ok(http_request)
     }
 
     fn from_first_line(line: &String) -> Result<Self, std::io::Error> {
-        let split: Vec<&str> = line.split(" ").collect();
+        let split: Vec<&str> = line.split(' ').collect();
 
         if split.len() != 3 {
             return Err(std::io::Error::new(
@@ -66,16 +82,16 @@ impl HttpRequest {
         return Ok(http_request);
     }
 
-    fn add_headers(&mut self, lines: &[String]) -> Result<(), std::io::Error> {
+    fn add_headers_from_lines(&mut self, lines: &[String]) -> Result<(), std::io::Error> {
         for line in lines {
-            if !line.contains(":") {
+            if !line.contains(':') {
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::InvalidData,
                     "Invalid http header",
                 ));
             }
 
-            let (key, value) = line.split_once(":").unwrap_or_default();
+            let (key, value) = line.split_once(':').unwrap_or_default();
 
             self.headers.insert(key.to_string(), value.to_string());
         }

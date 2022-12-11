@@ -5,6 +5,7 @@ use std::net::TcpListener;
 use std::net::TcpStream;
 
 use crate::http::http_request::HttpRequest;
+use crate::http::http_response::HttpResponse;
 
 pub struct HttpServer {
     address: String,
@@ -42,9 +43,13 @@ impl HttpServer {
     }
 
     pub fn handle_connection(&self, stream: &mut TcpStream) -> Result<(), std::io::Error> {
-        let _http_request = HttpRequest::from_stream(&stream)?;
+        let http_request = HttpRequest::from_stream(&stream)?;
 
-        stream.write_all("HTTP/1.1 200 OK".as_bytes())?;
+        let mut http_response = HttpResponse::new(&http_request);
+
+        http_response.add_body("Hello, World!");
+
+        stream.write_all(http_response.to_string().as_bytes())?;
 
         Ok(())
     }
