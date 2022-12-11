@@ -9,27 +9,34 @@ use std::path;
 use crate::http::http_request::HttpRequest;
 use crate::http::http_response::HttpResponse;
 
+/// An http server
 pub struct HttpServer {
+    /// The address of the server
     address: String,
-    host: String,
+    /// The port of the server
+    port: String,
+    /// A TcpListener
     listener: TcpListener,
 }
 
 impl HttpServer {
-    pub fn new(address: &'static str, host: &'static str) -> Result<Self, std::io::Error> {
-        let listener = TcpListener::bind(format!("{}:{}", address, host))?;
+    /// HttpServer constructor
+    /// Returns a new http server from an address and a port, like 127.0.0.1:8080
+    pub fn new(address: &'static str, port: &'static str) -> Result<Self, std::io::Error> {
+        let listener = TcpListener::bind(format!("{}:{}", address, port))?;
 
         let server = Self {
             address: address.to_string(),
-            host: host.to_string(),
+            port: port.to_string(),
             listener,
         };
 
         return Ok(server);
     }
 
+    /// Starts listening to client requests and sends the server responses
     pub fn start(&self) -> Result<(), std::io::Error> {
-        println!("Server running at {}:{}", self.address, self.host);
+        println!("Server running at {}:{}", self.address, self.port);
 
         for stream in self.listener.incoming() {
             if let Err(e) = stream {
@@ -44,6 +51,7 @@ impl HttpServer {
         Ok(())
     }
 
+    /// Handles a single request and sends a single response
     pub fn handle_connection(&self, stream: &mut TcpStream) -> Result<(), std::io::Error> {
         let http_request = HttpRequest::from_stream(&stream)?;
 

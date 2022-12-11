@@ -7,30 +7,41 @@ use std::net::TcpStream;
 
 use crate::http::http_method::HttpMethod;
 
+/// An http request
 pub struct HttpRequest {
+    /// An http method, like GET or POST
     method: HttpMethod,
+    /// A url
     target: String,
+    /// The http version
     version: String,
+    /// Information for the server
     headers: HashMap<String, String>,
 }
 
 impl HttpRequest {
+    /// Getter for the method
     pub fn method(&self) -> &HttpMethod {
         &self.method
     }
 
+    /// Getter for the target
     pub fn target(&self) -> &String {
         &self.target
     }
 
+    /// Getter for the version
     pub fn version(&self) -> &String {
         &self.version
     }
 
+    /// Getter for the headers
     pub fn headers(&self) -> &HashMap<String, String> {
         &self.headers
     }
 
+    /// HttpRequest constructor
+    /// Returns an http request from a TcpStream
     pub fn from_stream(stream: &TcpStream) -> Result<Self, std::io::Error> {
         let buf_reader = BufReader::new(stream);
 
@@ -54,6 +65,7 @@ impl HttpRequest {
         Ok(http_request)
     }
 
+    /// Reads the method, target and version
     fn from_first_line(line: &String) -> Result<Self, std::io::Error> {
         let split: Vec<&str> = line.split(' ').collect();
 
@@ -82,6 +94,7 @@ impl HttpRequest {
         return Ok(http_request);
     }
 
+    /// Reads and adds the headers
     fn add_headers_from_lines(&mut self, lines: &[String]) -> Result<(), std::io::Error> {
         for line in lines {
             if !line.contains(':') {
