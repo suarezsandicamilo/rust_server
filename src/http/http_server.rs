@@ -52,30 +52,48 @@ impl HttpServer {
     }
 
     /// Handles a single request and sends a single response
-    pub fn handle_connection(&self, stream: &mut TcpStream) -> Result<(), std::io::Error> {
+    fn handle_connection(&self, stream: &mut TcpStream) -> Result<(), std::io::Error> {
         let http_request = HttpRequest::from_stream(&stream)?;
 
-        match http_request.target().as_str() {
+        let target = http_request.target().as_str();
+
+        match target {
             "/" => {
-                let file = path::Path::new("./pages/index.html");
-
-                let data = fs::read_to_string(file)?;
-
-                let mut http_response = HttpResponse::new(&http_request);
-
-                http_response.add_body(&data);
-
-                stream.write_all(http_response.to_string().as_bytes())?;
+                self.serve_static(stream, &http_request, "./pages/index.html")?;
             }
             _ => {
-                let mut http_response = HttpResponse::new(&http_request);
-
-                http_response.set_code(404);
-                http_response.add_body(&"Not Found!".to_string());
-
-                stream.write_all(http_response.to_string().as_bytes())?;
+                self.serve_not_found(stream, &http_request)?;
             }
         }
+
+        Ok(())
+    }
+
+    fn serve_static(
+        &self,
+        stream: &mut TcpStream,
+        http_request: &HttpRequest,
+        path: &'static str,
+    ) -> Result<(), std::io::Error> {
+        let file = path::Path::new(path);
+
+        let data = fs::read_to_string(file)?;
+
+        let mut http_response = HttpResponse::new(&http_request);
+
+        http_response.add_body(&data);
+
+        stream.write_all(http_response.to_string().as_bytes())?;
+
+        Ok(())
+    }
+
+    fn serve_not_found(
+        &self,
+        stream: &mut TcpStream,
+        http_request: &HttpRequest,
+    ) -> Result<(), std::io::Error> {
+        self.serve_static(stream, http_request, "./pages/not_found.html")?;
 
         Ok(())
     }
