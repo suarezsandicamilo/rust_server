@@ -121,7 +121,17 @@ impl HttpServer {
         stream: &mut TcpStream,
         http_request: &HttpRequest,
     ) -> Result<(), std::io::Error> {
-        self.serve_static(stream, http_request, "./pages/not_found.html")?;
+        let file = path::Path::new("./pages/not_found.html");
+
+        let data = fs::read_to_string(file)?;
+
+        let mut http_response = HttpResponse::new(&http_request);
+
+        http_response.set_code(404);
+        http_response.set_message("Not Found");
+        http_response.add_body(&data);
+
+        stream.write_all(http_response.to_string().as_bytes())?;
 
         Ok(())
     }
