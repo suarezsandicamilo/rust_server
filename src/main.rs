@@ -1,5 +1,6 @@
 // Copyright 2022 Camilo Suárez Sandí
 
+pub mod app;
 pub mod http;
 
 use crate::http::http_server::HttpServer;

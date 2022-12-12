@@ -6,6 +6,7 @@ use std::net::TcpListener;
 use std::net::TcpStream;
 use std::path;
 
+use crate::http::http_app::HttpApp;
 use crate::http::http_request::HttpRequest;
 use crate::http::http_response::HttpResponse;
 
@@ -17,6 +18,7 @@ pub struct HttpServer {
     port: String,
     /// A TcpListener
     listener: TcpListener,
+    apps: Vec<Box<dyn HttpApp>>,
 }
 
 impl HttpServer {
@@ -29,6 +31,7 @@ impl HttpServer {
             address: address.to_string(),
             port: port.to_string(),
             listener,
+            apps: vec![],
         };
 
         return Ok(server);
@@ -62,6 +65,16 @@ impl HttpServer {
                 self.serve_static(stream, &http_request, "./pages/index.html")?;
             }
             _ => {
+                for app in &self.apps {
+                    let mut http_response = HttpResponse::new(&http_request);
+
+                    if app.handle(&http_request, &mut http_response)? {
+                        stream.write_all(http_response.to_string().as_bytes())?;
+
+                        return Ok(());
+                    }
+                }
+
                 if self.serve_public(stream, &http_request)? {
                     return Ok(());
                 }
