@@ -4,18 +4,10 @@ pub mod http;
 
 use crate::http::http_server::HttpServer;
 
-fn main() {
-    let server = HttpServer::new("127.0.0.1", "8080");
+fn main() -> Result<(), std::io::Error> {
+    let server = HttpServer::new("127.0.0.1", "8080")?;
 
-    if let Err(e) = server {
-        eprintln!("{e}");
-        return;
-    }
+    server.start()?;
 
-    if let Ok(server) = server {
-        if let Err(e) = server.start() {
-            eprintln!("{e}");
-            return;
-        }
-    }
+    Ok(())
 }
