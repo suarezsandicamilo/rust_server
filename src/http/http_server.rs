@@ -62,6 +62,10 @@ impl HttpServer {
                 self.serve_static(stream, &http_request, "./pages/index.html")?;
             }
             _ => {
+                if self.serve_public(stream, &http_request)? {
+                    return Ok(());
+                }
+
                 self.serve_not_found(stream, &http_request)?;
             }
         }
@@ -86,6 +90,30 @@ impl HttpServer {
         stream.write_all(http_response.to_string().as_bytes())?;
 
         Ok(())
+    }
+
+    fn serve_public(
+        &self,
+        stream: &mut TcpStream,
+        http_request: &HttpRequest,
+    ) -> Result<bool, std::io::Error> {
+        let mut path = "./public".to_string();
+
+        path.push_str(http_request.target());
+
+        let file = path::Path::new(&path);
+
+        if let Ok(data) = fs::read_to_string(file) {
+            let mut http_response = HttpResponse::new(&http_request);
+
+            http_response.add_body(&data);
+
+            stream.write_all(http_response.to_string().as_bytes())?;
+
+            return Ok(true);
+        }
+
+        Ok(false)
     }
 
     fn serve_not_found(
