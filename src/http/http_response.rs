@@ -9,7 +9,7 @@ pub struct HttpResponse {
     /// The http version
     version: String,
     /// An http code, like 200 or 404
-    code: u32,
+    code: usize,
     /// An http message, like OK
     message: String,
     /// Information for the server
@@ -20,7 +20,7 @@ pub struct HttpResponse {
 
 impl HttpResponse {
     /// Setter for the code
-    pub fn set_code(&mut self, code: u32) {
+    pub fn set_code(&mut self, code: usize) {
         self.code = code;
     }
 

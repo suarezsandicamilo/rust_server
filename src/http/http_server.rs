@@ -57,7 +57,7 @@ impl HttpServer {
 
         match http_request.target().as_str() {
             "/" => {
-                let file = path::Path::new("./public/index.html");
+                let file = path::Path::new("./pages/index.html");
 
                 let data = fs::read_to_string(file)?;
 
