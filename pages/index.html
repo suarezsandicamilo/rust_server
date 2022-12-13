@@ -1,10 +1,35 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Rust Server</title>
+        <title>To Do!</title>
         <link rel="stylesheet" href="main.css">
     </head>
     <body>
-        <p>Index!</p>
+        <div id="header" class="container-fluid">
+            <h1>To Do!</h1>
+        </div>
+        <div id="content" class="container-fluid">
+            <form method="get" name="to-do-add">
+                <div class="mb-3">
+                    <input type="text" class="form-control" name="to-do-name">
+                </div>
+                <button type="submit" class="btn btn-primary">Add</button>
+            </form>
+            <table class="table table-hover">
+                <tbody>
+                    <tr>
+                        <th scope="row">1</th>
+                        <td>
+                            <label>Example To Do!</label>
+                        </td>
+                        <td>
+                            <form method="get" name="to-do-check">
+                                <input type="checkbox" class="form-check-input">
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </body>
 </html>
