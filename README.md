@@ -12,7 +12,7 @@ git clone https://github.com/suarezsandicamilo/rust_server.git
 
 ## Usage
 
-Run with [Cargo](https://crates.io/crates/deno).
+Run with [Cargo](https://github.com/rust-lang/cargo).
 
 ```
 cargo run -- <address> <port>
