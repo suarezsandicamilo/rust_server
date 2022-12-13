@@ -1,6 +1,7 @@
 // Copyright 2022 Camilo Suárez Sandí
 
 use std::fs;
+use std::io::Error;
 use std::io::Write;
 use std::net::TcpListener;
 use std::net::TcpStream;
@@ -9,8 +10,6 @@ use std::path;
 use crate::http::http_app::HttpApp;
 use crate::http::http_request::HttpRequest;
 use crate::http::http_response::HttpResponse;
-
-use super::http_response;
 
 /// An http server
 pub struct HttpServer {
@@ -26,7 +25,7 @@ pub struct HttpServer {
 impl HttpServer {
     /// HttpServer constructor
     /// Returns a new http server from an address and a port, like 127.0.0.1:8080
-    pub fn new(address: &'static str, port: &'static str) -> Result<Self, std::io::Error> {
+    pub fn new(address: &'static str, port: &'static str) -> Result<Self, Error> {
         let listener = TcpListener::bind(format!("{}:{}", address, port))?;
 
         let server = Self {
@@ -40,7 +39,7 @@ impl HttpServer {
     }
 
     /// Starts listening to client requests and sends the server responses
-    pub fn start(&self) -> Result<(), std::io::Error> {
+    pub fn start(&self) -> Result<(), Error> {
         println!("Server running at {}:{}", self.address, self.port);
 
         for stream in self.listener.incoming() {
@@ -57,7 +56,7 @@ impl HttpServer {
     }
 
     /// Handles a single request and sends a single response
-    fn handle_connection(&self, stream: &mut TcpStream) -> Result<(), std::io::Error> {
+    fn handle_connection(&self, stream: &mut TcpStream) -> Result<(), Error> {
         let http_request = HttpRequest::from_stream(&stream)?;
 
         let mut http_response = HttpResponse::new();
@@ -99,7 +98,7 @@ impl HttpServer {
         &self,
         http_response: &mut HttpResponse,
         path: &'static str,
-    ) -> Result<(), std::io::Error> {
+    ) -> Result<(), Error> {
         let file = path::Path::new(path);
 
         let data = fs::read_to_string(file)?;
@@ -113,7 +112,7 @@ impl HttpServer {
         &self,
         http_request: &HttpRequest,
         http_response: &mut HttpResponse,
-    ) -> Result<bool, std::io::Error> {
+    ) -> Result<bool, Error> {
         let mut path = "./public".to_string();
 
         path.push_str(http_request.target());
@@ -129,7 +128,7 @@ impl HttpServer {
         Ok(false)
     }
 
-    fn serve_not_found(&self, http_response: &mut HttpResponse) -> Result<(), std::io::Error> {
+    fn serve_not_found(&self, http_response: &mut HttpResponse) -> Result<(), Error> {
         let file = path::Path::new("./pages/not_found.html");
 
         let data = fs::read_to_string(file)?;

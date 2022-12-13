@@ -3,6 +3,8 @@
 use std::collections::HashMap;
 use std::io::BufRead;
 use std::io::BufReader;
+use std::io::Error;
+use std::io::ErrorKind;
 use std::net::TcpStream;
 
 use crate::http::http_method::HttpMethod;
@@ -42,7 +44,7 @@ impl HttpRequest {
 
     /// HttpRequest constructor
     /// Returns an http request from a TcpStream
-    pub fn from_stream(stream: &TcpStream) -> Result<Self, std::io::Error> {
+    pub fn from_stream(stream: &TcpStream) -> Result<Self, Error> {
         let buf_reader = BufReader::new(stream);
 
         let lines: Vec<String> = buf_reader
@@ -52,8 +54,8 @@ impl HttpRequest {
             .collect();
 
         if lines.is_empty() {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
                 "The http request is empty",
             ));
         }
@@ -66,12 +68,12 @@ impl HttpRequest {
     }
 
     /// Reads the method, target and version
-    fn from_first_line(line: &String) -> Result<Self, std::io::Error> {
+    fn from_first_line(line: &String) -> Result<Self, Error> {
         let split: Vec<&str> = line.split(' ').collect();
 
         if split.len() != 3 {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
                 "Invalid http request message",
             ));
         }
@@ -95,13 +97,10 @@ impl HttpRequest {
     }
 
     /// Reads and adds the headers
-    fn add_headers_from_lines(&mut self, lines: &[String]) -> Result<(), std::io::Error> {
+    fn add_headers_from_lines(&mut self, lines: &[String]) -> Result<(), Error> {
         for line in lines {
             if !line.contains(':') {
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::InvalidData,
-                    "Invalid http header",
-                ));
+                return Err(Error::new(ErrorKind::InvalidInput, "Invalid http header"));
             }
 
             let (key, value) = line.split_once(':').unwrap_or_default();
