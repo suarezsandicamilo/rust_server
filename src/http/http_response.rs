@@ -18,8 +18,8 @@ pub struct HttpResponse {
 
 impl HttpResponse {
     /// Setter for the version
-    pub fn set_version(&mut self, version: &String) {
-        self.version = version.clone();
+    pub fn set_version(&mut self, version: &str) {
+        self.version = version.to_string();
     }
 
     /// Setter for the code
@@ -28,17 +28,17 @@ impl HttpResponse {
     }
 
     /// Setter for the message
-    pub fn set_message(&mut self, message: &'static str) {
+    pub fn set_message(&mut self, message: &str) {
         self.message = message.to_string()
     }
 
     /// Adds a key and a value as a header
-    pub fn add_header(&mut self, key: &'static str, value: &'static str) {
+    pub fn add_header(&mut self, key: &str, value: &str) {
         self.headers.insert(key.to_string(), value.to_string());
     }
 
     /// Concatenates a string to the body
-    pub fn add_body(&mut self, string: &String) {
+    pub fn add_body(&mut self, string: &str) {
         self.body.push_str(string);
     }
 

@@ -68,7 +68,7 @@ impl HttpRequest {
     }
 
     /// Reads the method, target and version
-    fn from_first_line(line: &String) -> Result<Self, Error> {
+    fn from_first_line(line: &str) -> Result<Self, Error> {
         let split: Vec<&str> = line.split(' ').collect();
 
         if split.len() != 3 {

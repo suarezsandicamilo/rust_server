@@ -25,7 +25,7 @@ pub struct HttpServer {
 impl HttpServer {
     /// HttpServer constructor
     /// Returns a new http server from an address and a port, like 127.0.0.1:8080
-    pub fn new(address: &'static str, port: &'static str) -> Result<Self, Error> {
+    pub fn new(address: &str, port: &str) -> Result<Self, Error> {
         let listener = TcpListener::bind(format!("{}:{}", address, port))?;
 
         let server = Self {
@@ -68,37 +68,31 @@ impl HttpServer {
         match target {
             "/" => {
                 self.serve_static(&mut http_response, "./pages/index.html")?;
+                stream.write_all(http_response.to_string().as_bytes())?;
             }
 
             _ => {
                 for app in &self.apps {
                     if app.handle(&http_request, &mut http_response)? {
                         stream.write_all(http_response.to_string().as_bytes())?;
-
                         return Ok(());
                     }
                 }
 
                 if self.serve_public(&http_request, &mut http_response)? {
                     stream.write_all(http_response.to_string().as_bytes())?;
-
                     return Ok(());
                 }
 
-                stream.write_all(http_response.to_string().as_bytes())?;
-
                 self.serve_not_found(&mut http_response)?;
+                stream.write_all(http_response.to_string().as_bytes())?;
             }
         }
 
         Ok(())
     }
 
-    fn serve_static(
-        &self,
-        http_response: &mut HttpResponse,
-        path: &'static str,
-    ) -> Result<(), Error> {
+    fn serve_static(&self, http_response: &mut HttpResponse, path: &str) -> Result<(), Error> {
         let file = path::Path::new(path);
 
         let data = fs::read_to_string(file)?;

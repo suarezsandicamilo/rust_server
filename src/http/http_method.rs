@@ -18,7 +18,7 @@ impl HttpMethod {
     /// HttpMethod constructor
     /// Returns an http method from a verb
     /// It requires that the verb is one of the possible http methods
-    pub fn new<'a>(verb: &'a str) -> Result<Self, Error> {
+    pub fn new(verb: &str) -> Result<Self, Error> {
         for http_method in HTTP_METHODS {
             if verb == http_method {
                 return Ok(Self {
