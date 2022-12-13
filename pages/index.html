@@ -17,10 +17,11 @@
             </form>
             <table class="table table-hover">
                 <tbody>
+                    {{#tasks}}
                     <tr>
-                        <th scope="row">1</th>
+                        <th scope="row">{{index}}</th>
                         <td>
-                            <label>Example To Do!</label>
+                            <label>{{text}}</label>
                         </td>
                         <td>
                             <form method="get" name="to-do-check">
@@ -28,6 +29,7 @@
                             </form>
                         </td>
                     </tr>
+                    {{/tasks}}
                 </tbody>
             </table>
         </div>
