@@ -10,6 +10,8 @@ use crate::http::http_app::HttpApp;
 use crate::http::http_request::HttpRequest;
 use crate::http::http_response::HttpResponse;
 
+use super::http_response;
+
 /// An http server
 pub struct HttpServer {
     /// The address of the server
@@ -58,16 +60,19 @@ impl HttpServer {
     fn handle_connection(&self, stream: &mut TcpStream) -> Result<(), std::io::Error> {
         let http_request = HttpRequest::from_stream(&stream)?;
 
+        let mut http_response = HttpResponse::new();
+
+        http_response.set_version(http_request.version());
+
         let target = http_request.target().as_str();
 
         match target {
             "/" => {
-                self.serve_static(stream, &http_request, "./pages/index.html")?;
+                self.serve_static(&mut http_response, "./pages/index.html")?;
             }
+
             _ => {
                 for app in &self.apps {
-                    let mut http_response = HttpResponse::new(&http_request);
-
                     if app.handle(&http_request, &mut http_response)? {
                         stream.write_all(http_response.to_string().as_bytes())?;
 
@@ -75,11 +80,15 @@ impl HttpServer {
                     }
                 }
 
-                if self.serve_public(stream, &http_request)? {
+                if self.serve_public(&http_request, &mut http_response)? {
+                    stream.write_all(http_response.to_string().as_bytes())?;
+
                     return Ok(());
                 }
 
-                self.serve_not_found(stream, &http_request)?;
+                stream.write_all(http_response.to_string().as_bytes())?;
+
+                self.serve_not_found(&mut http_response)?;
             }
         }
 
@@ -88,27 +97,22 @@ impl HttpServer {
 
     fn serve_static(
         &self,
-        stream: &mut TcpStream,
-        http_request: &HttpRequest,
+        http_response: &mut HttpResponse,
         path: &'static str,
     ) -> Result<(), std::io::Error> {
         let file = path::Path::new(path);
 
         let data = fs::read_to_string(file)?;
 
-        let mut http_response = HttpResponse::new(&http_request);
-
         http_response.add_body(&data);
-
-        stream.write_all(http_response.to_string().as_bytes())?;
 
         Ok(())
     }
 
     fn serve_public(
         &self,
-        stream: &mut TcpStream,
         http_request: &HttpRequest,
+        http_response: &mut HttpResponse,
     ) -> Result<bool, std::io::Error> {
         let mut path = "./public".to_string();
 
@@ -117,11 +121,7 @@ impl HttpServer {
         let file = path::Path::new(&path);
 
         if let Ok(data) = fs::read_to_string(file) {
-            let mut http_response = HttpResponse::new(&http_request);
-
             http_response.add_body(&data);
-
-            stream.write_all(http_response.to_string().as_bytes())?;
 
             return Ok(true);
         }
@@ -129,22 +129,14 @@ impl HttpServer {
         Ok(false)
     }
 
-    fn serve_not_found(
-        &self,
-        stream: &mut TcpStream,
-        http_request: &HttpRequest,
-    ) -> Result<(), std::io::Error> {
+    fn serve_not_found(&self, http_response: &mut HttpResponse) -> Result<(), std::io::Error> {
         let file = path::Path::new("./pages/not_found.html");
 
         let data = fs::read_to_string(file)?;
 
-        let mut http_response = HttpResponse::new(&http_request);
-
         http_response.set_code(404);
         http_response.set_message("Not Found");
         http_response.add_body(&data);
-
-        stream.write_all(http_response.to_string().as_bytes())?;
 
         Ok(())
     }

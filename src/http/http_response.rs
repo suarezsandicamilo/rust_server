@@ -2,8 +2,6 @@
 
 use std::collections::HashMap;
 
-use super::http_request::HttpRequest;
-
 /// An http response
 pub struct HttpResponse {
     /// The http version
@@ -19,6 +17,11 @@ pub struct HttpResponse {
 }
 
 impl HttpResponse {
+    /// Setter for the version
+    pub fn set_version(&mut self, version: &String) {
+        self.version = version.clone();
+    }
+
     /// Setter for the code
     pub fn set_code(&mut self, code: usize) {
         self.code = code;
@@ -40,10 +43,10 @@ impl HttpResponse {
     }
 
     /// HttpResponse constructor
-    /// Returns an http response, it saves a copy of the http version from an http request
-    pub fn new(request: &HttpRequest) -> Self {
+    /// Returns an http response
+    pub fn new() -> Self {
         Self {
-            version: request.version().clone(),
+            version: "".to_string(),
             code: 200,
             message: "OK".to_string(),
             headers: HashMap::new(),
@@ -66,6 +69,7 @@ impl HttpResponse {
             string.push_str(key);
             string.push_str(": ");
             string.push_str(value);
+            string.push('\n');
         }
 
         if !self.body.is_empty() {
