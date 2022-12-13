@@ -19,6 +19,7 @@ pub struct HttpServer {
     port: String,
     /// A TcpListener
     listener: TcpListener,
+    /// All the apps connected to the server
     apps: Vec<Box<dyn HttpApp>>,
 }
 
@@ -36,6 +37,10 @@ impl HttpServer {
         };
 
         return Ok(server);
+    }
+
+    pub fn add_app(&mut self, app: Box<dyn HttpApp>) {
+        self.apps.push(app);
     }
 
     /// Starts listening to client requests and sends the server responses
@@ -61,43 +66,22 @@ impl HttpServer {
 
         let mut http_response = HttpResponse::new();
 
-        http_response.set_version(http_request.version());
+        http_response.set_version(http_request.get_version());
 
-        let target = http_request.target().as_str();
-
-        match target {
-            "/" => {
-                self.serve_static(&mut http_response, "./pages/index.html")?;
+        for app in &self.apps {
+            if app.handle(&http_request, &mut http_response)? {
                 stream.write_all(http_response.to_string().as_bytes())?;
-            }
-
-            _ => {
-                for app in &self.apps {
-                    if app.handle(&http_request, &mut http_response)? {
-                        stream.write_all(http_response.to_string().as_bytes())?;
-                        return Ok(());
-                    }
-                }
-
-                if self.serve_public(&http_request, &mut http_response)? {
-                    stream.write_all(http_response.to_string().as_bytes())?;
-                    return Ok(());
-                }
-
-                self.serve_not_found(&mut http_response)?;
-                stream.write_all(http_response.to_string().as_bytes())?;
+                return Ok(());
             }
         }
 
-        Ok(())
-    }
+        if self.serve_public(&http_request, &mut http_response)? {
+            stream.write_all(http_response.to_string().as_bytes())?;
+            return Ok(());
+        }
 
-    fn serve_static(&self, http_response: &mut HttpResponse, path: &str) -> Result<(), Error> {
-        let file = path::Path::new(path);
-
-        let data = fs::read_to_string(file)?;
-
-        http_response.add_body(&data);
+        self.serve_not_found(&mut http_response)?;
+        stream.write_all(http_response.to_string().as_bytes())?;
 
         Ok(())
     }
@@ -109,7 +93,7 @@ impl HttpServer {
     ) -> Result<bool, Error> {
         let mut path = "./public".to_string();
 
-        path.push_str(http_request.target());
+        path.push_str(http_request.get_target());
 
         let file = path::Path::new(&path);
 

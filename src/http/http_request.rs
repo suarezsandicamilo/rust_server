@@ -23,22 +23,22 @@ pub struct HttpRequest {
 
 impl HttpRequest {
     /// Getter for the method
-    pub fn method(&self) -> &HttpMethod {
+    pub fn get_method(&self) -> &HttpMethod {
         &self.method
     }
 
     /// Getter for the target
-    pub fn target(&self) -> &String {
+    pub fn get_target(&self) -> &String {
         &self.target
     }
 
     /// Getter for the version
-    pub fn version(&self) -> &String {
+    pub fn get_version(&self) -> &String {
         &self.version
     }
 
     /// Getter for the headers
-    pub fn headers(&self) -> &HashMap<String, String> {
+    pub fn get_headers(&self) -> &HashMap<String, String> {
         &self.headers
     }
 
