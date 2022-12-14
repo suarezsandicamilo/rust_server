@@ -6,7 +6,7 @@ pub mod http;
 use std::io::Error;
 use std::io::ErrorKind;
 
-use crate::app::to_to_app::ToDoApp;
+use crate::app::tasks_app::TasksApp;
 use crate::http::http_server::HttpServer;
 
 fn main() -> Result<(), Error> {
@@ -22,7 +22,7 @@ fn main() -> Result<(), Error> {
 
     let mut server = HttpServer::new(address, host)?;
 
-    let todo_app = Box::new(ToDoApp {});
+    let todo_app = Box::new(TasksApp {});
 
     server.add_app(todo_app);
 

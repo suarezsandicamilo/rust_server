@@ -8,9 +8,9 @@ use crate::http::http_app::HttpApp;
 use crate::http::http_request::HttpRequest;
 use crate::http::http_response::HttpResponse;
 
-pub struct ToDoApp {}
+pub struct TasksApp {}
 
-impl HttpApp for ToDoApp {
+impl HttpApp for TasksApp {
     fn handle(
         &self,
         http_request: &HttpRequest,
@@ -28,7 +28,7 @@ impl HttpApp for ToDoApp {
     }
 }
 
-impl ToDoApp {
+impl TasksApp {
     fn serve_index(&self, http_response: &mut HttpResponse) -> Result<(), Error> {
         let file = path::Path::new("./pages/index.html");
 
