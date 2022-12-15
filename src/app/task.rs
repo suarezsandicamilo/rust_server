@@ -10,12 +10,27 @@ pub struct Task {
 }
 
 impl Task {
+    pub fn new(text: &str, done: bool) -> Self {
+        Self {
+            text: text.to_string(),
+            done,
+        }
+    }
+
     pub fn get_text(&self) -> &String {
         &self.text
     }
 
-    pub fn is_done(&self) -> &bool {
-        &self.done
+    pub fn check(&mut self) {
+        self.done = true;
+    }
+
+    pub fn uncheck(&mut self) {
+        self.done = false;
+    }
+
+    pub fn is_done(&self) -> bool {
+        self.done
     }
 
     pub fn from_json(value: &json::JsonValue) -> Result<Self, Error> {
@@ -32,5 +47,12 @@ impl Task {
         };
 
         Ok(task)
+    }
+
+    pub fn to_json(&self) -> json::JsonValue {
+        json::object! {
+            text: self.text.clone(),
+            done: self.done
+        }
     }
 }

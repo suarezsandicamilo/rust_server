@@ -1,16 +1,3 @@
 {
-    "values": [
-        {
-            "text": "I have to do everything 1!",
-            "done": false
-        },
-        {
-            "text": "I have to do everything 2!",
-            "done": false
-        },
-        {
-            "text": "I have to do everything 3!",
-            "done": false
-        }
-    ]
+    "values": []
 }

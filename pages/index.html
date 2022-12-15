@@ -21,7 +21,7 @@
                             </button>
                         </div>
                     </div>
-                </form>    
+                </form>
             </div>
             <div class="container-fluid my-1 py-1">
                 {{#tasks}}
@@ -34,21 +34,22 @@
                             {{^done}}
                             <label>{{text}}</label>
                             {{/done}}
-                        </div>
                             {{#done}}
                             <s>{{text}}</s>
-                        </div>
                             {{/done}}
+                        </div>
                         <div class="col-1">
                             {{^done}}
                             <button type="submit" class="btn btn-primary" name="check" value="{{index}}">
                                 <i class="bi-check"></i>
                             </button>
-                        </div>{{/done}}{{#done}}
+                            {{/done}}
+                            {{#done}}
                             <button type="submit" class="btn btn-primary" name="uncheck" value="{{index}}">
                                 <i class="bi-arrow-left"></i>
                             </button>
-                        </div>{{/done}}
+                            {{/done}}
+                        </div>
                         <div class="col-1">
                             <button type="submit" class="btn btn-primary" name="remove" value="{{index}}">
                                 <i class="bi-trash"></i>
