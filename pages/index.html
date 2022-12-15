@@ -5,33 +5,59 @@
         <link rel="stylesheet" href="main.css">
     </head>
     <body>
-        <div id="header" class="container-fluid">
+        <div id="header" class="container-fluid my-1 py-1">
             <h1>Tasks!</h1>
         </div>
-        <div id="content" class="container-fluid">
-            <form method="get" name="to-do-add">
-                <div class="mb-3">
-                    <input type="text" class="form-control" name="to-do-name">
-                </div>
-                <button type="submit" class="btn btn-primary">Add</button>
-            </form>
-            <table class="table table-hover">
-                <tbody>
-                    {{#tasks}}
-                    <tr>
-                        <th scope="row">{{index}}</th>
-                        <td>
+        <div id="content" class="container-fluid my-1 py-1">
+            <div class="container-fluid">
+                <form method="get" action="add">
+                    <div class="row my-1 py-1">
+                        <div class="col-11">
+                            <input type="text" class="form-control" name="text" required>
+                        </div>
+                        <div class="col-1">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>    
+            </div>
+            <div class="container-fluid my-1 py-1">
+                {{#tasks}}
+                <form method="get" action="update">
+                    <div class="row my-1 py-1">
+                        <div class="col-1">
+                            <b>{{index}}</b>
+                        </div>
+                        <div class="col-9">
+                            {{^done}}
                             <label>{{text}}</label>
-                        </td>
-                        <td>
-                            <form method="get" name="to-do-check">
-                                <input type="checkbox" class="form-check-input">
-                            </form>
-                        </td>
-                    </tr>
-                    {{/tasks}}
-                </tbody>
-            </table>
+                            {{/done}}
+                        </div>
+                            {{#done}}
+                            <s>{{text}}</s>
+                        </div>
+                            {{/done}}
+                        <div class="col-1">
+                            {{^done}}
+                            <button type="submit" class="btn btn-primary" name="check" value="{{index}}">
+                                <i class="bi-check"></i>
+                            </button>
+                        </div>{{/done}}{{#done}}
+                            <button type="submit" class="btn btn-primary" name="uncheck" value="{{index}}">
+                                <i class="bi-arrow-left"></i>
+                            </button>
+                        </div>{{/done}}
+                        <div class="col-1">
+                            <button type="submit" class="btn btn-primary" name="remove" value="{{index}}">
+                                <i class="bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                {{/tasks}}
+            </div>
         </div>
     </body>
 </html>
