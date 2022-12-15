@@ -9,7 +9,7 @@ use crate::http::http_response::HttpResponse;
 
 pub trait HttpApp {
     fn handle(
-        &self,
+        &mut self,
         http_request: &HttpRequest,
         http_response: &mut HttpResponse,
     ) -> Result<bool, Error>;

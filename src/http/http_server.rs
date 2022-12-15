@@ -1,5 +1,6 @@
 // Copyright 2022 Camilo Suárez Sandí
 
+use std::cell::RefCell;
 use std::fs;
 use std::io::Error;
 use std::io::Write;
@@ -20,7 +21,7 @@ pub struct HttpServer {
     /// A TcpListener
     listener: TcpListener,
     /// All the apps connected to the server
-    apps: Vec<Box<dyn HttpApp>>,
+    apps: RefCell<Vec<Box<dyn HttpApp>>>,
 }
 
 impl HttpServer {
@@ -33,14 +34,14 @@ impl HttpServer {
             address: address.to_string(),
             port: port.to_string(),
             listener,
-            apps: vec![],
+            apps: RefCell::new(vec![]),
         };
 
         return Ok(server);
     }
 
     pub fn add_app(&mut self, app: Box<dyn HttpApp>) {
-        self.apps.push(app);
+        self.apps.borrow_mut().push(app);
     }
 
     /// Starts listening to client requests and sends the server responses
@@ -68,7 +69,7 @@ impl HttpServer {
 
         http_response.set_version(http_request.get_version());
 
-        for app in &self.apps {
+        for app in self.apps.borrow_mut().iter_mut() {
             if app.handle(&http_request, &mut http_response)? {
                 stream.write_all(http_response.to_string().as_bytes())?;
                 return Ok(());

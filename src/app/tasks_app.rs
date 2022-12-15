@@ -16,14 +16,14 @@ pub struct TasksApp {
 
 impl HttpApp for TasksApp {
     fn handle(
-        &self,
+        &mut self,
         http_request: &HttpRequest,
         http_response: &mut HttpResponse,
     ) -> Result<bool, Error> {
         let target = http_request.get_target();
 
         if target == "/" {
-            // self.read_data();
+            self.read_data()?;
 
             self.serve_index(http_response)?;
 

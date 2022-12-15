@@ -22,9 +22,7 @@ fn main() -> Result<(), Error> {
 
     let mut server = HttpServer::new(address, host)?;
 
-    let mut tasks_app = Box::new(TasksApp::new());
-
-    tasks_app.read_data()?;
+    let tasks_app = Box::new(TasksApp::new());
 
     server.add_app(tasks_app);
 
