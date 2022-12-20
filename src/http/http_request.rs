@@ -69,6 +69,12 @@ impl HttpRequest {
 
         let mut http_request = Self::from_first_line(&lines[0])?;
 
+        println!(
+            "Request: {} {}",
+            http_request.get_method().get_verb(),
+            http_request.get_target()
+        );
+
         http_request.add_headers_from_lines(&lines[1..])?;
 
         Ok(http_request)

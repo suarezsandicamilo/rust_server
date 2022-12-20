@@ -2,6 +2,7 @@
 
 use std::fs;
 use std::io::Error;
+use std::io::ErrorKind;
 use std::path;
 
 use crate::app::task::Task;
@@ -9,28 +10,10 @@ use crate::http::http_app::HttpApp;
 use crate::http::http_request::HttpRequest;
 use crate::http::http_response::HttpResponse;
 
+use regex::Regex;
+
 pub struct TasksApp {
     tasks: Vec<Task>,
-}
-
-#[derive(Debug, serde_derive::Serialize, serde_derive::Deserialize)]
-struct AddTaskParameters {
-    text: String,
-}
-
-#[derive(Debug, serde_derive::Serialize, serde_derive::Deserialize)]
-struct CheckTaskParameters {
-    check: usize,
-}
-
-#[derive(Debug, serde_derive::Serialize, serde_derive::Deserialize)]
-struct UncheckTaskParameters {
-    uncheck: usize,
-}
-
-#[derive(Debug, serde_derive::Serialize, serde_derive::Deserialize)]
-struct RemoveTaskParameters {
-    remove: usize,
 }
 
 impl HttpApp for TasksApp {
@@ -41,7 +24,7 @@ impl HttpApp for TasksApp {
     ) -> Result<bool, Error> {
         let target = http_request.get_target();
 
-        if target == "/" {
+        if http_request.get_method().get_verb() == "GET" && target == "/" {
             self.read_data()?;
 
             self.serve_index(http_response)?;
@@ -49,7 +32,7 @@ impl HttpApp for TasksApp {
             return Ok(true);
         }
 
-        if target.starts_with("/add?") {
+        if http_request.get_method().get_verb() == "GET" && target.starts_with("/add?") {
             self.serve_add(target)?;
 
             http_response.set_code(302);
@@ -61,7 +44,7 @@ impl HttpApp for TasksApp {
             return Ok(true);
         }
 
-        if target.starts_with("/update") {
+        if http_request.get_method().get_verb() == "GET" && target.starts_with("/update?") {
             self.serve_update(target)?;
 
             http_response.set_code(302);
@@ -163,9 +146,18 @@ impl TasksApp {
     fn serve_add(&mut self, target: &String) -> Result<(), Error> {
         let target = target.strip_prefix("/add?").unwrap();
 
-        let parameters: AddTaskParameters = serde_qs::from_str(target).unwrap();
+        let re = Regex::new(r"text=([\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]+)").unwrap();
 
-        self.tasks.push(Task::new(&parameters.text, false));
+        if !re.is_match(target) {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Invalid url to add a task",
+            ));
+        }
+
+        let text = re.captures(target).unwrap().get(1).unwrap().as_str();
+
+        self.tasks.push(Task::new(text, false));
 
         Ok(())
     }
@@ -174,9 +166,22 @@ impl TasksApp {
         let target = target.strip_prefix("/update?").unwrap();
 
         if target.starts_with("check") {
-            let parameters: CheckTaskParameters = serde_qs::from_str(target).unwrap();
+            let re = Regex::new(r"check=([1-9][0-9]*)").unwrap();
 
-            let index = parameters.check - 1;
+            if !re.is_match(target) {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    "Invalid url to check a task",
+                ));
+            }
+
+            let text = re.captures(target).unwrap().get(1).unwrap().as_str();
+
+            let index: usize = text.parse::<usize>().unwrap() - 1;
+
+            if index >= self.tasks.len() {
+                return Err(Error::new(ErrorKind::InvalidInput, "Invalid task index"));
+            }
 
             self.tasks[index].check();
 
@@ -184,9 +189,22 @@ impl TasksApp {
         }
 
         if target.starts_with("uncheck") {
-            let parameters: UncheckTaskParameters = serde_qs::from_str(target).unwrap();
+            let re = Regex::new(r"uncheck=([1-9][0-9]*)").unwrap();
 
-            let index = parameters.uncheck - 1;
+            if !re.is_match(target) {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    "Invalid url to uncheck a task",
+                ));
+            }
+
+            let text = re.captures(target).unwrap().get(1).unwrap().as_str();
+
+            let index: usize = text.parse::<usize>().unwrap() - 1;
+
+            if index >= self.tasks.len() {
+                return Err(Error::new(ErrorKind::InvalidInput, "Invalid task index"));
+            }
 
             self.tasks[index].uncheck();
 
@@ -194,9 +212,22 @@ impl TasksApp {
         }
 
         if target.starts_with("remove") {
-            let parameters: RemoveTaskParameters = serde_qs::from_str(target).unwrap();
+            let re = Regex::new(r"remove=([1-9][0-9]*)").unwrap();
 
-            let index = parameters.remove - 1;
+            if !re.is_match(target) {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    "Invalid url to uncheck a task",
+                ));
+            }
+
+            let text = re.captures(target).unwrap().get(1).unwrap().as_str();
+
+            let index: usize = text.parse::<usize>().unwrap() - 1;
+
+            if index >= self.tasks.len() {
+                return Err(Error::new(ErrorKind::InvalidInput, "Invalid task index"));
+            }
 
             self.tasks.remove(index);
 

@@ -70,9 +70,17 @@ impl HttpServer {
         http_response.set_version(http_request.get_version());
 
         for app in self.apps.borrow_mut().iter_mut() {
-            if app.handle(&http_request, &mut http_response)? {
-                stream.write_all(http_response.to_string().as_bytes())?;
-                return Ok(());
+            let result = app.handle(&http_request, &mut http_response);
+
+            if let Err(e) = &result {
+                eprintln!("{e}");
+            }
+
+            if let Ok(handle) = result {
+                if handle {
+                    stream.write_all(http_response.to_string().as_bytes())?;
+                    return Ok(());
+                }
             }
         }
 
