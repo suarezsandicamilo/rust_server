@@ -73,7 +73,7 @@ impl HttpResponse {
         }
 
         if !self.body.is_empty() {
-            string.push_str("\n\n");
+            string.push_str("\n");
             string.push_str(&self.body);
         }
 
