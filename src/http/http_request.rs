@@ -22,6 +22,16 @@ pub struct HttpRequest {
 }
 
 impl HttpRequest {
+    /// Empty constructor
+    pub fn new() -> Self {
+        HttpRequest {
+            method: HttpMethod::new("GET").unwrap(),
+            target: "/".to_string(),
+            version: "HTTP/1.1".to_string(),
+            headers: HashMap::new(),
+        }
+    }
+
     /// Getter for the method
     pub fn get_method(&self) -> &HttpMethod {
         &self.method
@@ -54,10 +64,7 @@ impl HttpRequest {
             .collect();
 
         if lines.is_empty() {
-            return Err(Error::new(
-                ErrorKind::InvalidInput,
-                "The http request is empty",
-            ));
+            return Ok(HttpRequest::new());
         }
 
         let mut http_request = Self::from_first_line(&lines[0])?;
