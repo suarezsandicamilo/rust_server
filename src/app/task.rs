@@ -33,26 +33,33 @@ impl Task {
         self.done
     }
 
-    pub fn from_json(value: &json::JsonValue) -> Result<Self, Error> {
-        let text = &value["text"];
-        let done = &value["done"];
+    pub fn from_string(string: &str) -> Result<Self, Error> {
+        if let Some((text, done)) = string.split_once('\t') {
+            if done != "false" && done != "true" {
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Invalid task property: done",
+                ));
+            }
 
-        if text.is_null() || !text.is_string() || done.is_null() || !done.is_boolean() {
-            return Err(Error::new(ErrorKind::InvalidData, "Invalid json"));
+            let done = match done {
+                "false" => false,
+                "true" => true,
+                _ => false,
+            };
+
+            let task = Task {
+                text: text.to_string(),
+                done,
+            };
+
+            return Ok(task);
         }
 
-        let task = Self {
-            text: text.as_str().unwrap_or_default().to_string(),
-            done: done.as_bool().unwrap_or_default(),
-        };
-
-        Ok(task)
+        Err(Error::new(ErrorKind::InvalidData, "Invalid task"))
     }
 
-    pub fn to_json(&self) -> json::JsonValue {
-        json::object! {
-            text: self.text.clone(),
-            done: self.done
-        }
+    pub fn to_string(&self) -> String {
+        format!("{}\t{}", self.text, self.done)
     }
 }

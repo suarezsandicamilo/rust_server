@@ -2,7 +2,6 @@
 
 use std::fs;
 use std::io::Error;
-use std::io::ErrorKind;
 use std::path;
 
 use crate::app::task::Task;
@@ -90,23 +89,15 @@ impl TasksApp {
     pub fn read_data(&mut self) -> Result<(), Error> {
         self.tasks.clear();
 
-        let file = path::Path::new("./data/tasks.json");
+        let file = path::Path::new("./data/tasks.txt");
 
         let data = fs::read_to_string(file)?;
 
-        if let Ok(data) = json::parse(&data) {
-            if !data.is_object() {
-                return Err(Error::new(ErrorKind::InvalidData, "Invalid json"));
-            }
+        let mut lines = data.lines();
 
-            let values = &data["values"];
-
-            if values.is_null() || !values.is_array() {
-                return Err(Error::new(ErrorKind::InvalidData, "Invalid json"));
-            }
-
-            for value in values.members() {
-                let task = Task::from_json(value)?;
+        while let Some(line) = lines.next() {
+            if !line.is_empty() {
+                let task = Task::from_string(line)?;
 
                 self.tasks.push(task);
             }
@@ -116,19 +107,23 @@ impl TasksApp {
     }
 
     pub fn write_data(&self) -> Result<(), Error> {
-        let mut values = json::array![];
+        let mut data = "".to_string();
+
+        let mut index = 0;
 
         for task in &self.tasks {
-            values.push(task.to_json()).unwrap();
+            data.push_str(&task.to_string());
+
+            if index < self.tasks.len() - 1 {
+                data.push('\n');
+            }
+
+            index += 1;
         }
 
-        let file = path::Path::new("./data/tasks.json");
+        let file = path::Path::new("./data/tasks.txt");
 
-        let data = json::object! {
-            values: values
-        };
-
-        fs::write(file, json::stringify_pretty(data, 4))?;
+        fs::write(file, data)?;
 
         Ok(())
     }

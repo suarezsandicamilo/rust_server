@@ -6,7 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-json = "0.12.4"
 mustache = "0.9.0"
 serde = "1.0.150"
 serde_derive = "1.0.150"
