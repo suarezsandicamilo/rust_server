@@ -23,4 +23,10 @@ pub trait HttpApp {
 
         Ok(())
     }
+
+    fn redirect(&self, http_response: &mut HttpResponse, target: &str) {
+        http_response.set_code(302);
+        http_response.set_message("Found");
+        http_response.add_header("Location", target);
+    }
 }

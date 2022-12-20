@@ -26,7 +26,6 @@ impl HttpApp for TasksApp {
 
         if http_request.get_method().get_verb() == "GET" && target == "/" {
             self.read_data()?;
-
             self.serve_index(http_response)?;
 
             return Ok(true);
@@ -34,11 +33,7 @@ impl HttpApp for TasksApp {
 
         if http_request.get_method().get_verb() == "GET" && target.starts_with("/add?") {
             self.serve_add(target)?;
-
-            http_response.set_code(302);
-            http_response.set_message("Found");
-            http_response.add_header("Location", "/");
-
+            self.redirect(http_response, "/");
             self.write_data()?;
 
             return Ok(true);
@@ -46,11 +41,7 @@ impl HttpApp for TasksApp {
 
         if http_request.get_method().get_verb() == "GET" && target.starts_with("/update?") {
             self.serve_update(target)?;
-
-            http_response.set_code(302);
-            http_response.set_message("Found");
-            http_response.add_header("Location", "/");
-
+            self.redirect(http_response, "/");
             self.write_data()?;
 
             return Ok(true);
