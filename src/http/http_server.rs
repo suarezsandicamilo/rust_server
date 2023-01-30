@@ -1,16 +1,19 @@
-// Copyright 2022 Camilo Suárez Sandí
+// Copyright 2023 Camilo Suárez Sandí
 
-use std::cell::RefCell;
 use std::fs;
 use std::io::Error;
 use std::io::Write;
 use std::net::TcpListener;
 use std::net::TcpStream;
 use std::path;
+use std::sync::Arc;
+use std::sync::Mutex;
+use std::sync::MutexGuard;
 
 use crate::http::http_app::HttpApp;
 use crate::http::http_request::HttpRequest;
 use crate::http::http_response::HttpResponse;
+use crate::thread::thread_pool::ThreadPool;
 
 /// An http server
 pub struct HttpServer {
@@ -21,7 +24,7 @@ pub struct HttpServer {
     /// A TcpListener
     listener: TcpListener,
     /// All the apps connected to the server
-    apps: RefCell<Vec<Box<dyn HttpApp>>>,
+    apps: Mutex<Vec<Box<dyn HttpApp + Send + Sync>>>,
 }
 
 impl HttpServer {
@@ -34,69 +37,75 @@ impl HttpServer {
             address: address.to_string(),
             port: port.to_string(),
             listener,
-            apps: RefCell::new(vec![]),
+            apps: Mutex::new(Vec::new()),
         };
 
         return Ok(server);
     }
 
-    pub fn add_app(&mut self, app: Box<dyn HttpApp>) {
-        self.apps.borrow_mut().push(app);
+    pub fn add_app(&mut self, app: Box<dyn HttpApp + Send + Sync>) {
+        self.apps.lock().unwrap().push(app);
     }
 
     /// Starts listening to client requests and sends the server responses
-    pub fn start(&self) -> Result<(), Error> {
+    pub fn start(&mut self) -> Result<(), Error> {
         println!("Server running at {}:{}", self.address, self.port);
 
-        for stream in self.listener.incoming() {
-            if let Err(e) = stream {
-                return Err(e);
-            }
+        let workers_count = std::thread::available_parallelism()?.get();
 
-            if let Ok(mut stream) = stream {
-                self.handle_connection(&mut stream)?;
-            }
+        let thread_pool = ThreadPool::new(workers_count);
+
+        let mut apps = Mutex::new(vec![]);
+
+        std::mem::swap(&mut apps, &mut self.apps);
+
+        let apps = Arc::new(apps);
+
+        for stream in self.listener.incoming() {
+            let apps = Arc::clone(&apps);
+
+            let mut stream = stream?;
+
+            thread_pool.execute(move || {
+                let apps = apps.lock().unwrap();
+
+                HttpServer::handle_connection(&mut stream, apps).unwrap();
+            })
         }
 
         Ok(())
     }
 
     /// Handles a single request and sends a single response
-    fn handle_connection(&self, stream: &mut TcpStream) -> Result<(), Error> {
+    fn handle_connection(
+        stream: &mut TcpStream,
+        mut apps: MutexGuard<Vec<Box<dyn HttpApp + Send + Sync>>>,
+    ) -> Result<(), Error> {
         let http_request = HttpRequest::from_stream(&stream)?;
 
         let mut http_response = HttpResponse::new();
 
         http_response.set_version(http_request.get_version());
 
-        for app in self.apps.borrow_mut().iter_mut() {
-            let result = app.handle(&http_request, &mut http_response);
-
-            if let Err(e) = &result {
-                eprintln!("{e}");
-            }
-
-            if let Ok(handle) = result {
-                if handle {
-                    stream.write_all(http_response.to_string().as_bytes())?;
-                    return Ok(());
-                }
+        for app in apps.iter_mut() {
+            if app.handle(&http_request, &mut http_response)? {
+                stream.write_all(http_response.to_string().as_bytes())?;
+                return Ok(());
             }
         }
 
-        if self.serve_public(&http_request, &mut http_response)? {
+        if HttpServer::serve_public(&http_request, &mut http_response)? {
             stream.write_all(http_response.to_string().as_bytes())?;
             return Ok(());
         }
 
-        self.serve_not_found(&mut http_response)?;
+        HttpServer::serve_not_found(&mut http_response)?;
         stream.write_all(http_response.to_string().as_bytes())?;
 
         Ok(())
     }
 
     fn serve_public(
-        &self,
         http_request: &HttpRequest,
         http_response: &mut HttpResponse,
     ) -> Result<bool, Error> {
@@ -115,7 +124,7 @@ impl HttpServer {
         Ok(false)
     }
 
-    fn serve_not_found(&self, http_response: &mut HttpResponse) -> Result<(), Error> {
+    fn serve_not_found(http_response: &mut HttpResponse) -> Result<(), Error> {
         let file = path::Path::new("./pages/not_found.html");
 
         let data = fs::read_to_string(file)?;

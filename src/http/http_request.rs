@@ -1,4 +1,4 @@
-// Copyright 2022 Camilo Suárez Sandí
+// Copyright 2023 Camilo Suárez Sandí
 
 use std::collections::HashMap;
 use std::io::BufRead;
@@ -69,6 +69,7 @@ impl HttpRequest {
 
         let mut http_request = Self::from_first_line(&lines[0])?;
 
+        // TODO: Remove
         println!(
             "Request: {} {}",
             http_request.get_method().get_verb(),

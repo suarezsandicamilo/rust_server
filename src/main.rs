@@ -2,6 +2,7 @@
 
 pub mod app;
 pub mod http;
+pub mod thread;
 
 use std::io::Error;
 use std::io::ErrorKind;
