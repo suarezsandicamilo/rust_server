@@ -3,8 +3,11 @@
 use std::io::Error;
 use std::io::ErrorKind;
 
-#[derive(Debug)]
+use serde::Serialize;
+
+#[derive(Debug, Serialize)]
 pub struct Task {
+    index: usize,
     text: String,
     done: bool,
 }
@@ -12,9 +15,18 @@ pub struct Task {
 impl Task {
     pub fn new(text: &str, done: bool) -> Self {
         Self {
+            index: 0,
             text: text.to_string(),
             done,
         }
+    }
+
+    pub fn set_index(&mut self, index: usize) {
+        self.index = index;
+    }
+
+    pub fn get_index(&self) -> &usize {
+        &self.index
     }
 
     pub fn get_text(&self) -> &String {
@@ -49,6 +61,7 @@ impl Task {
             };
 
             let task = Task {
+                index: 0,
                 text: text.to_string(),
                 done,
             };

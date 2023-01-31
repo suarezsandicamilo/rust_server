@@ -69,12 +69,18 @@ impl TasksApp {
 
         let mut lines = data.lines();
 
+        let mut index = 1;
+
         while let Some(line) = lines.next() {
             if !line.is_empty() {
-                let task = Task::from_string(line)?;
+                let mut task = Task::from_string(line)?;
+
+                task.set_index(index);
 
                 self.tasks.push(task);
             }
+
+            index += 1;
         }
 
         Ok(())
@@ -102,33 +108,21 @@ impl TasksApp {
         Ok(())
     }
 
-    fn serve_index(&self, http_response: &mut HttpResponse) -> Result<(), Error> {
+    fn serve_index(&mut self, http_response: &mut HttpResponse) -> Result<(), Error> {
         let file = path::Path::new("./pages/index.html");
 
         let data = fs::read_to_string(file)?;
 
-        if let Ok(data) = mustache::compile_str(&data) {
-            let map = mustache::MapBuilder::new().insert_vec("tasks", |mut vec| {
-                let mut index = 1;
+        let mut context = tera::Context::new();
 
-                for task in &self.tasks {
-                    vec = vec.push_map(|map| {
-                        map.insert_str("index", index.to_string())
-                            .insert_str("text", task.get_text())
-                            .insert_bool("done", task.is_done())
-                    });
+        context.insert("tasks", &self.tasks);
 
-                    index += 1;
-                }
+        let mut tera = tera::Tera::default();
 
-                vec
-            });
+        let data = tera.render_str(&data, &context);
 
-            let map = map.build();
-
-            if let Ok(data) = data.render_data_to_string(&map) {
-                http_response.add_body(&data);
-            }
+        if let Ok(data) = data {
+            http_response.add_body(&data);
         }
 
         Ok(())

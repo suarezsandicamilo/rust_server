@@ -24,40 +24,38 @@
                 </form>
             </div>
             <div class="container-fluid my-1 py-1">
-                {{#tasks}}
+                {% for task in tasks %}
                 <form method="get" action="update">
                     <div class="row my-1 py-1">
                         <div class="col-1">
-                            <b>{{index}}</b>
+                            <b>{{task.index}}</b>
                         </div>
                         <div class="col-9">
-                            {{^done}}
-                            <label>{{text}}</label>
-                            {{/done}}
-                            {{#done}}
-                            <s>{{text}}</s>
-                            {{/done}}
+                            {% if task.done %}
+                            <s>{{task.text}}</s>
+                            {% else %}
+                            <label>{{task.text}}</label>
+                            {% endif %}
                         </div>
                         <div class="col-1">
-                            {{^done}}
-                            <button type="submit" class="btn btn-primary" name="check" value="{{index}}">
-                                <i class="bi-check"></i>
-                            </button>
-                            {{/done}}
-                            {{#done}}
-                            <button type="submit" class="btn btn-primary" name="uncheck" value="{{index}}">
+                            {% if task.done %}
+                            <button type="submit" class="btn btn-primary" name="uncheck" value="{{task.index}}">
                                 <i class="bi-arrow-left"></i>
                             </button>
-                            {{/done}}
+                            {% else %}
+                            <button type="submit" class="btn btn-primary" name="check" value="{{task.index}}">
+                                <i class="bi-check"></i>
+                            </button>
+                            {% endif %}
                         </div>
                         <div class="col-1">
-                            <button type="submit" class="btn btn-primary" name="remove" value="{{index}}">
+                            <button type="submit" class="btn btn-primary" name="remove" value="{{task.index}}">
                                 <i class="bi-trash"></i>
                             </button>
                         </div>
                     </div>
                 </form>
-                {{/tasks}}
+                {% endfor %}
             </div>
         </div>
     </body>
